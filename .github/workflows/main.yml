@@ -32,7 +32,9 @@ jobs:
           - WebGL
           - StandaloneWindows64
           - StandaloneOSX
-          - StandaloneLinux64
+          - StandaloneLinux64 
+    env:
+      Build_Zip_Path: ${{env.BUILD_DIR}}/${{env.BUILD_NAME_PREFIX}}-${{ matrix.targetPlatform }}-${{steps.git_semantic_version.outputs.version}}.zip
     steps:
       - name: Delete huge unnecessary tools folder
         run: rm -rf /opt/hostedtoolcache
@@ -41,6 +43,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Git Semantic Version
+        uses: paulhatch/semantic-version@v5.4.0
+        with:
+          # Optional path to check for changes. If any changes are detected in the path the
+          # 'changed' output will true. Enter multiple paths separated by spaces.
+          change_path: ${{ env.PROJ_DIR }}
+          # Named version, will be used as suffix for name version tag
+          namespace: ${{ env.PROJ_NAME }}
+          # If enabled, diagnostic information will be added to the action output.
+          debug: true
 
       - name: Library Cache
         uses: actions/cache@v3
@@ -75,7 +88,7 @@ jobs:
       - name: Zip Build
         uses: montudor/action-zip@v1
         with:
-          args: zip -qq -r ${{env.BUILD_DIR}}/${{env.BUILD_NAME_PREFIX}}-${{ matrix.targetPlatform }}.zip ${{env.BUILD_DIR}}/${{ matrix.targetPlatform }}
+          args: zip -qq -r ${{ Build_Zip_Path }} ${{env.BUILD_DIR}}/${{ matrix.targetPlatform }}
 
       - name: Download Butler
         run: |
@@ -87,6 +100,6 @@ jobs:
 
       - name: Push Build to Butler
         run: |
-          ./butler push ${{env.BUILD_DIR}}/${{env.BUILD_NAME_PREFIX}}-${{ matrix.targetPlatform }}.zip ${{env.ITCH_GAME_NAME}}:${{ matrix.targetPlatform }}
+          ./butler push ${{ Build_Zip_Path }} ${{env.ITCH_GAME_NAME}}:${{ matrix.targetPlatform }} --userversion ${{steps.git_semantic_version.outputs.version}}
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
