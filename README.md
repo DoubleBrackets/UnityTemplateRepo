@@ -1,6 +1,8 @@
 # UnityTemplateRepo
 Simple Template Repo for Unity
 
+The .gitignore should be moved into the Unity Project Folder after creation
+
 #### Github Actions Auto-Build to itch.io
 
 See: 
